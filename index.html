@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Creador de Instructivos</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1F4E8C">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Instructivos">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style id="shared">
+/* Layout idea: hoja técnica de procedimiento. Fondo gris azulado, tarjetas blancas, números condensados grandes por paso, franja amarilla solo para precauciones. */
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --ink:#14202B; --muted:#586878; --line:#D3DBE3;
+  --accent:#1F4E8C; --accent-ink:#FFFFFF; --warn:#F2B632; --warn-bg:#FFF6DD; --danger:#B3261E;
+  --display:'Barlow Condensed','Arial Narrow',sans-serif;
+  --body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F151B; --surface:#18212A; --ink:#E6EDF3; --muted:#93A4B3; --line:#2B3947;
+    --accent:#6AA6F0; --accent-ink:#0B1722; --warn:#F2B632; --warn-bg:#2C2410; --danger:#FF8A80;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F151B; --surface:#18212A; --ink:#E6EDF3; --muted:#93A4B3; --line:#2B3947;
+  --accent:#6AA6F0; --accent-ink:#0B1722; --warn:#F2B632; --warn-bg:#2C2410; --danger:#FF8A80;
+  color-scheme:dark;
+}
+/* ---------- Documento (vista previa y archivo exportado) ---------- */
+.doc{max-width:780px;margin:0 auto;font-family:var(--body);color:var(--ink);line-height:1.55;font-size:16px}
+.doc *{box-sizing:border-box}
+.doc-head{background:var(--surface);border:1px solid var(--line);border-top:8px solid var(--accent);border-radius:6px;padding:22px 20px 18px}
+.doc .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.doc h1{font-family:var(--display);font-weight:700;font-size:clamp(36px,9vw,56px);line-height:1;margin:8px 0 8px;text-wrap:balance}
+.doc .lead{color:var(--muted);margin:0 0 4px}
+.doc .meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px 16px;margin:14px 0 0;padding-top:14px;border-top:1px dashed var(--line)}
+.doc .meta dt{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.doc .meta dd{margin:2px 0 0;font-weight:500}
+.doc .panel-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:12px}
+.doc .panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.doc .panel h2{font-family:var(--display);font-size:24px;line-height:1.1;margin:0 0 6px;text-transform:uppercase;letter-spacing:.03em}
+.doc .panel .sub{font-size:13px;color:var(--muted);margin:0 0 6px}
+.doc .panel.safety{border-left:6px solid var(--warn)}
+.doc .panel ul{margin:0;padding-left:18px}
+.doc .steps{margin:22px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:14px}
+.doc .step{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px}
+.doc .num{font-family:var(--display);font-weight:700;font-size:58px;line-height:.9;color:var(--accent);min-width:46px}
+.doc .step h3{font-family:var(--display);font-size:28px;line-height:1.1;margin:2px 0 8px;font-weight:700;text-wrap:balance}
+.doc .step p{margin:0 0 10px}
+.doc .warn{background:var(--warn-bg);border-left:5px solid var(--warn);padding:10px 12px;border-radius:4px;margin:0 0 10px;font-size:15px}
+.doc .warn b{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.doc .media{grid-column:1 / -1;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:6px}
+.doc .media figure{margin:0;background:var(--bg);border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.doc .media img,.doc .media video{display:block;width:100%;height:auto;max-height:440px;object-fit:contain;background:#0b0f13}
+.doc .media img{cursor:zoom-in;max-height:560px;background:var(--bg)}
+.doc .media figcaption{font-size:13px;color:var(--muted);padding:6px 8px}
+.doc .ph{padding:18px 10px;text-align:center;font-size:13px;color:var(--muted)}
+.doc .vid-note{display:none}
+.doc .doc-foot{margin:22px 0 0;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center}
+.doc img.zoom{position:fixed;inset:0;z-index:50;width:100vw;height:100vh;max-height:none;object-fit:contain;background:rgba(0,0,0,.92);cursor:zoom-out}
+@media print{
+  :root:root:root{--bg:#fff;--surface:#fff;--ink:#000;--muted:#444;--line:#bbb;--accent:#1F4E8C;--warn-bg:#FFF6DD;color-scheme:light}
+  @page{size:A4;margin:14mm}
+  body{background:#fff !important;padding:0 !important}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .no-print{display:none !important}
+  .doc .step,.doc .panel,.doc .doc-head{break-inside:avoid}
+  .doc .media video{display:none}
+  .doc .vid-note{display:block;padding:12px;font-size:13px}
+  .doc .media img{max-height:90mm}
+}
+</style>
+<style id="appui">
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body)}
+*{box-sizing:border-box}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.app{max-width:780px;margin:0 auto;padding:0 16px 120px}
+.top{position:sticky;top:0;z-index:10;background:var(--bg);padding:12px 0 10px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line)}
+.brand{font-family:var(--display);font-weight:700;font-size:22px;min-width:0;letter-spacing:.02em;text-transform:uppercase;line-height:.95}
+.brand small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--muted);font-weight:500;margin-top:3px}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;flex:none}
+.seg button{border:0;background:none;padding:0 14px;min-height:40px;border-radius:7px;font:600 14px var(--body);color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.note{display:flex;gap:12px;align-items:center;justify-content:space-between;background:var(--warn-bg);border-left:5px solid var(--warn);border-radius:6px;padding:10px 12px;margin-top:14px;font-size:14px}
+.note button{flex:none}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;margin-top:14px}
+.card h2{font-family:var(--display);font-size:24px;line-height:1.1;text-transform:uppercase;letter-spacing:.03em;margin:0 0 12px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:10px}
+.stack{display:flex;flex-direction:column;gap:10px}
+label.f{display:flex;flex-direction:column;gap:5px;font-family:var(--mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.f input,.f textarea,.stitle,.cap,.paste{font:16px var(--body);text-transform:none;letter-spacing:0;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:46px;width:100%}
+.f textarea,.paste{resize:vertical;min-height:88px;line-height:1.45}
+.steps-h{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 0}
+.steps-h h2{font-family:var(--display);font-size:24px;text-transform:uppercase;letter-spacing:.03em;margin:0}
+.steps-h span{font-family:var(--mono);font-size:12px;color:var(--muted)}
+#stepsList{display:flex;flex-direction:column;gap:14px;margin-top:10px}
+.scard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.shead{display:flex;align-items:center;gap:10px}
+.badge{font-family:var(--display);font-weight:700;font-size:38px;line-height:1;color:var(--accent);min-width:36px}
+.stitle{flex:1;min-width:0;font-weight:600;font-size:17px}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.thumb{display:flex;flex-direction:column;gap:6px}
+.tmedia{position:relative;aspect-ratio:4/3;background:#0b0f13;border-radius:8px;overflow:hidden}
+.tmedia img,.tmedia video{width:100%;height:100%;object-fit:cover;display:block}
+.tmedia .x{position:absolute;top:6px;right:6px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;font-size:16px;cursor:pointer}
+.cap{min-height:40px;font-size:14px;padding:8px 10px}
+.srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 16px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font:600 15px var(--body);cursor:pointer;text-align:center}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.small{min-height:40px;padding:0 12px;font-size:14px}
+.btn:disabled{opacity:.4;cursor:default}
+.icon{width:44px;height:44px;border-radius:8px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);font-size:18px;cursor:pointer}
+.icon:disabled{opacity:.35;cursor:default}
+.empty{color:var(--muted);text-align:center;padding:26px 10px;border:2px dashed var(--line);border-radius:10px;margin:0}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px}
+.bar .in{display:flex;gap:10px;max-width:780px;margin:0 auto}
+.bar .btn{flex:1}
+.bar .btn.primary{flex:2;font-size:17px}
+#preview{padding-top:16px}
+.sheet-back{position:fixed;inset:0;z-index:40;background:rgba(8,12,16,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheet-back[hidden]{display:none}
+.sheet{background:var(--bg);width:100%;max-width:780px;max-height:90%;overflow-y:auto;border-radius:16px 16px 0 0;padding:16px}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.sheet-h h2{font-family:var(--display);font-size:28px;text-transform:uppercase;letter-spacing:.03em;margin:0}
+.opt{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.opt h3{font-family:var(--display);font-size:22px;line-height:1.1;margin:0;text-transform:uppercase;letter-spacing:.02em}
+.opt p{margin:0;font-size:14px;color:var(--muted);line-height:1.5}
+.opt ol{margin:0;padding-left:20px;font-size:14px;color:var(--muted);line-height:1.5}
+.opt .btns{display:flex;gap:8px;flex-wrap:wrap}
+.opt .btns .btn{flex:1;min-width:150px}
+.hint{font-family:var(--mono);font-size:12px !important}
+.toast{position:fixed;left:50%;bottom:86px;transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;max-width:calc(100% - 32px);opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+.in[hidden]{display:none}
+.seg button:disabled{opacity:.4;cursor:default}
+.seg button{padding:0 11px}
+.brand small{display:none}
+.ph1{font-family:var(--display);font-size:30px;text-transform:uppercase;letter-spacing:.02em;margin:18px 0 4px}
+.psub{margin:0 0 12px;color:var(--muted);font-size:14px;line-height:1.5}
+#homeList{display:flex;flex-direction:column;gap:12px}
+.pcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;gap:10px;align-items:center}
+.popen{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;text-align:left;background:none;border:0;padding:4px;color:var(--ink);font:inherit;cursor:pointer}
+.popen strong{font-family:var(--display);font-size:24px;line-height:1.1;font-weight:700}
+.popen span{font-size:14px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.popen .pm{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.savestate{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted);margin:12px 0 0;text-transform:uppercase}
+@media print{.top,.bar,#editor,#home,.sheet-back,.toast{display:none !important}.app{padding:0;max-width:none}#preview{padding:0}}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="brand">Instructivos</div>
+    <div class="seg" role="group" aria-label="Pantalla">
+      <button type="button" id="tabHome" aria-pressed="true">Lista</button>
+      <button type="button" id="tabEdit" aria-pressed="false" disabled>Editar</button>
+      <button type="button" id="tabView" aria-pressed="false" disabled>Previa</button>
+    </div>
+  </div>
+
+  <div id="home">
+    <h1 class="ph1">Mis instructivos</h1>
+    <p class="psub">Se guardan solos en este teléfono. Para enviarlos o publicarlos, expórtalos como HTML.</p>
+    <div id="homeList"></div>
+  </div>
+
+  <div id="editor" hidden>
+    <p class="savestate" id="saveState" aria-live="polite"></p>
+
+    <section class="card" aria-labelledby="h-datos">
+      <h2 id="h-datos">Datos del equipo</h2>
+      <div class="stack">
+        <label class="f">Título del instructivo<input data-k="titulo" id="f-titulo" type="text" autocomplete="off"></label>
+        <label class="f">Equipo (nombre y modelo)<input data-k="equipo" id="f-equipo" type="text" autocomplete="off"></label>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <label class="f">Área o ubicación<input data-k="area" id="f-area" type="text" autocomplete="off"></label>
+        <label class="f">Versión<input data-k="version" id="f-version" type="text" autocomplete="off"></label>
+        <label class="f">Elaborado por<input data-k="autor" id="f-autor" type="text" autocomplete="off"></label>
+        <label class="f">Fecha<input data-k="fecha" id="f-fecha" type="date"></label>
+      </div>
+      <label class="f">Objetivo (para qué sirve este instructivo)<textarea data-k="objetivo" id="f-objetivo"></textarea></label>
+    </section>
+
+    <section class="card" aria-labelledby="h-seg">
+      <h2 id="h-seg">Seguridad y materiales</h2>
+      <div class="stack">
+        <label class="f">EPP (elementos de protección personal), uno por línea<textarea data-k="epp" id="f-epp"></textarea></label>
+        <label class="f">Materiales necesarios, uno por línea<textarea data-k="materiales" id="f-materiales"></textarea></label>
+      </div>
+    </section>
+
+    <div class="steps-h"><h2>Pasos</h2><span id="stepCount"></span></div>
+    <div id="stepsList"></div>
+  </div>
+
+  <div id="preview" hidden></div>
+</div>
+
+<div class="bar">
+  <div class="in" id="barHome">
+    <label class="btn" for="openFile">Abrir archivo</label>
+    <button type="button" class="btn primary" id="newProj">+ Nuevo instructivo</button>
+  </div>
+  <div class="in" id="barEdit" hidden>
+    <button type="button" class="btn primary" id="addStep">+ Paso</button>
+    <button type="button" class="btn" id="openSheet">Exportar</button>
+  </div>
+  <div class="in" id="barView" hidden>
+    <button type="button" class="btn" id="printBtn">Imprimir / PDF</button>
+    <button type="button" class="btn primary" id="openSheet2">Exportar</button>
+  </div>
+</div>
+<input type="file" id="openFile" class="vh" accept=".html,.json,text/html,application/json">
+
+<div class="sheet-back" id="sheetBack" hidden>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-h"><h2 id="sheetTitle">Exportar</h2><button type="button" class="icon" id="closeSheet" aria-label="Cerrar">✕</button></div>
+
+    <div class="opt">
+      <h3>Instructivo listo para publicar</h3>
+      <p>Un solo archivo HTML con tus fotos y videos adentro. En el celular se abre el menú de compartir: guárdalo en Archivos o envíalo por WhatsApp, Teams o correo. Para sacar un PDF, ve a Previa y toca Imprimir / PDF.</p>
+      <button type="button" class="btn primary" id="dlFull">Guardar o compartir HTML</button>
+      <p class="hint" id="sizeHint"></p>
+    </div>
+
+    <div class="opt">
+      <h3>Mejorar la redacción con Claude (opcional)</h3>
+      <ol>
+        <li>Guarda la versión liviana (sin fotos ni videos).</li>
+        <li>Copia el prompt y envíalo a Claude junto con ese archivo.</li>
+        <li>Pega aquí la respuesta de Claude y aplícala. Tus fotos y videos se conservan.</li>
+      </ol>
+      <div class="btns">
+        <button type="button" class="btn" id="dlLight">Guardar versión liviana</button>
+        <button type="button" class="btn" id="copyPrompt">Copiar prompt</button>
+      </div>
+      <textarea class="paste" id="promptBox" readonly hidden aria-label="Prompt para Claude"></textarea>
+      <textarea class="paste" id="pasteBox" placeholder="Pega aquí lo que te devuelva Claude" aria-label="Respuesta de Claude"></textarea>
+      <button type="button" class="btn" id="applyPaste">Aplicar texto mejorado</button>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var uid=function(){return Math.random().toString(36).slice(2,10)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+var nl=function(s){return esc(s).replace(/\n/g,'<br>')};
+var lines=function(s){return String(s||'').split('\n').map(function(x){return x.trim()}).filter(Boolean)};
+var str=function(v){return Array.isArray(v)?v.join('\n'):(v==null?'':String(v))};
+var FIELDS=['titulo','equipo','area','version','autor','fecha','objetivo','epp','materiales'];
+var MAX_VIDEO=50*1024*1024;
+var mb=function(n){return (n/1048576).toFixed(1).replace('.',',')};
+
+function todayISO(){return new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)}
+function fmtDate(iso){if(!iso)return '';try{return new Date(iso+'T12:00:00').toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'})}catch(e){return iso}}
+function blank(){var o={id:uid(),updated:Date.now()};FIELDS.forEach(function(k){o[k]=''});o.fecha=todayISO();o.steps=[];return o}
+function newStep(t){return {id:uid(),titulo:t&&t.titulo||'',texto:t&&t.texto||'',advertencia:t&&t.advertencia||'',media:[]}}
+function example(){
+  var o=blank();
+  o.titulo='Uso de la balanza analítica (ejemplo)';
+  o.equipo='Balanza analítica de precisión (0,0001 g)';
+  o.area='Laboratorio';
+  o.version='1.0';
+  o.objetivo='Pesar muestras con precisión y sin dañar el equipo.';
+  o.epp='Bata de laboratorio\nGuantes de nitrilo\nLentes de seguridad';
+  o.materiales='Espátula limpia\nRecipiente de pesaje\nPincel suave';
+  o.steps=[
+    newStep({titulo:'Revisar nivelación y limpieza',texto:'Mire la burbuja de nivel en la parte trasera del equipo: debe quedar centrada. Limpie el plato con el pincel.'}),
+    newStep({titulo:'Encender y esperar',texto:'Presione ON/OFF. Espere 30 minutos antes de pesar para que el equipo se estabilice.'}),
+    newStep({titulo:'Cerrar puertas y tarar',texto:'Ponga el recipiente en el plato, cierre las puertas laterales y presione TARE hasta ver 0,0000 g.',advertencia:'No apoye las manos sobre la mesa de pesaje: las vibraciones alteran la lectura.'}),
+    newStep({titulo:'Pesar la muestra',texto:'Agregue la muestra con la espátula, con las puertas cerradas. Anote el valor cuando aparezca el símbolo de estable.',advertencia:'Nunca supere la capacidad máxima indicada en la etiqueta del equipo.'}),
+    newStep({titulo:'Limpiar y apagar',texto:'Retire la muestra y el recipiente, limpie cualquier residuo con el pincel y apague el equipo.'})
+  ];
+  return o;
+}
+
+var state=null,view='home',DB=null,saveT=null,quiet=false;
+
+/* ---------- Aviso ---------- */
+var toastT;
+function toast(msg,ms){var t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show')},ms||3500)}
+
+/* ---------- Base de datos en el teléfono (IndexedDB) ---------- */
+function openDB(){return new Promise(function(res,rej){
+  if(!window.indexedDB)return rej(new Error('sin idb'));
+  var r=indexedDB.open('instructivos',1);
+  r.onupgradeneeded=function(){var d=r.result;d.createObjectStore('projects',{keyPath:'id'});d.createObjectStore('meta',{keyPath:'id'})};
+  r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)};
+})}
+function dbGet(store,id){return new Promise(function(res,rej){var r=DB.transaction(store).objectStore(store).get(id);r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)}})}
+function dbList(store){return new Promise(function(res,rej){if(!DB)return res([]);var r=DB.transaction(store).objectStore(store).getAll();r.onsuccess=function(){res(r.result||[])};r.onerror=function(){rej(r.error)}})}
+function storable(p){var o=clean(p,false);o.id=p.id;o.updated=p.updated;return o}
+function metaOf(p){var n=0;p.steps.forEach(function(s){n+=s.media.length});return {id:p.id,titulo:p.titulo,equipo:p.equipo,pasos:p.steps.length,medios:n,updated:p.updated}}
+function dbSave(p){return new Promise(function(res,rej){
+  var t=DB.transaction(['projects','meta'],'readwrite');
+  t.objectStore('projects').put(storable(p));t.objectStore('meta').put(metaOf(p));
+  t.oncomplete=function(){res()};t.onerror=function(){rej(t.error)};t.onabort=function(){rej(t.error)};
+})}
+function dbDelete(id){return new Promise(function(res,rej){
+  var t=DB.transaction(['projects','meta'],'readwrite');
+  t.objectStore('projects').delete(id);t.objectStore('meta').delete(id);
+  t.oncomplete=function(){res()};t.onerror=function(){rej(t.error)};
+})}
+function setSaved(t){var el=$('#saveState');if(el)el.textContent=t}
+function dirty(){
+  if(quiet||!state||!DB)return;
+  setSaved('Guardando…');clearTimeout(saveT);saveT=setTimeout(doSave,700);
+}
+function doSave(){
+  saveT=null;if(!state||!DB)return Promise.resolve();
+  state.updated=Date.now();
+  return dbSave(state).then(function(){setSaved('Guardado en este teléfono')}).catch(function(){setSaved('No se pudo guardar');toast('No se pudo guardar en este teléfono. Exporta el HTML para no perder tu trabajo.',6000)});
+}
+function flush(){if(saveT){clearTimeout(saveT);return doSave()}return Promise.resolve()}
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')flush()});
+window.addEventListener('pagehide',flush);
+
+/* ---------- Campos fijos ---------- */
+function loadFields(){FIELDS.forEach(function(k){var el=$('[data-k="'+k+'"]');if(el)el.value=state[k]||''})}
+document.addEventListener('input',function(e){
+  var k=e.target.dataset&&e.target.dataset.k;
+  if(k&&FIELDS.indexOf(k)>-1&&state){state[k]=e.target.value;dirty()}
+});
+
+/* ---------- Pasos ---------- */
+function thumb(m){
+  var media=m.kind==='video'
+    ?'<video src="'+(m._url||m.data)+'" controls playsinline preload="metadata"></video>'
+    :'<img src="'+m.data+'" alt="">';
+  return '<div class="thumb"><div class="tmedia">'+media+'<button type="button" class="x" data-act="rmm" data-mid="'+m.id+'" aria-label="Quitar este archivo">✕</button></div>'+
+    '<input class="cap" data-mcap="'+m.id+'" placeholder="Leyenda (opcional)" value="'+esc(m.caption)+'" aria-label="Leyenda de la foto o video"></div>';
+}
+function stepCard(s,i,n){
+  return '<article class="scard" data-sid="'+s.id+'">'+
+    '<div class="shead"><span class="badge" aria-hidden="true">'+(i+1)+'</span>'+
+    '<input class="stitle" data-f="titulo" placeholder="Título del paso" value="'+esc(s.titulo)+'" aria-label="Título del paso '+(i+1)+'"></div>'+
+    '<label class="f">Qué hacer<textarea data-f="texto" placeholder="Describe la acción con verbos: Presione, Verifique, Espere">'+esc(s.texto)+'</textarea></label>'+
+    '<label class="f">Precaución (opcional)<input data-f="advertencia" placeholder="Riesgo o error frecuente en este paso" value="'+esc(s.advertencia)+'"></label>'+
+    (s.media.length?'<div class="thumbs">'+s.media.map(thumb).join('')+'</div>':'')+
+    '<div class="srow">'+
+      '<label class="btn small" for="add-'+s.id+'">Agregar foto o video</label>'+
+      '<input type="file" class="vh" id="add-'+s.id+'" data-add accept="image/*,video/*" multiple>'+
+      '<span class="spacer"></span>'+
+      '<button type="button" class="icon" data-act="up" aria-label="Subir paso"'+(i===0?' disabled':'')+'>↑</button>'+
+      '<button type="button" class="icon" data-act="down" aria-label="Bajar paso"'+(i===n-1?' disabled':'')+'>↓</button>'+
+      '<button type="button" class="btn small danger" data-act="del">Eliminar</button>'+
+    '</div></article>';
+}
+function renderSteps(){
+  var n=state.steps.length;
+  $('#stepsList').innerHTML=n?state.steps.map(function(s,i){return stepCard(s,i,n)}).join(''):'<p class="empty">Aún no hay pasos. Toca + Paso para empezar.</p>';
+  $('#stepCount').textContent=n+(n===1?' paso':' pasos');
+  dirty();
+}
+function findStep(id){for(var i=0;i<state.steps.length;i++)if(state.steps[i].id===id)return i;return -1}
+
+var armed=null,armT;
+function arm(key,btn,txt,fn){
+  if(armed===key){clearTimeout(armT);armed=null;fn();return}
+  armed=key;var old=btn.textContent;btn.textContent=txt;
+  clearTimeout(armT);armT=setTimeout(function(){armed=null;btn.textContent=old},3500);
+}
+
+var list=$('#stepsList');
+list.addEventListener('input',function(e){
+  var card=e.target.closest('[data-sid]');if(!card)return;
+  var i=findStep(card.dataset.sid);if(i<0)return;
+  if(e.target.dataset.f)state.steps[i][e.target.dataset.f]=e.target.value;
+  if(e.target.dataset.mcap){
+    var ms=state.steps[i].media;
+    for(var j=0;j<ms.length;j++)if(ms[j].id===e.target.dataset.mcap)ms[j].caption=e.target.value;
+  }
+  dirty();
+});
+list.addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b)return;
+  var card=b.closest('[data-sid]');var i=findStep(card.dataset.sid);if(i<0)return;
+  var act=b.dataset.act;
+  if(act==='up'&&i>0){var t=state.steps[i];state.steps[i]=state.steps[i-1];state.steps[i-1]=t;renderSteps();focusCard(t.id)}
+  else if(act==='down'&&i<state.steps.length-1){var u=state.steps[i];state.steps[i]=state.steps[i+1];state.steps[i+1]=u;renderSteps();focusCard(u.id)}
+  else if(act==='del'){arm('del'+card.dataset.sid,b,'¿Seguro?',function(){state.steps.splice(i,1);renderSteps()})}
+  else if(act==='rmm'){
+    var ms=state.steps[i].media;
+    for(var j=0;j<ms.length;j++)if(ms[j].id===b.dataset.mid){if(ms[j]._url)URL.revokeObjectURL(ms[j]._url);ms.splice(j,1);break}
+    renderSteps();
+  }
+});
+list.addEventListener('change',function(e){
+  if(!e.target.matches('[data-add]'))return;
+  var card=e.target.closest('[data-sid]');
+  var files=Array.prototype.slice.call(e.target.files);
+  e.target.value='';
+  addFiles(card.dataset.sid,files);
+});
+function focusCard(id){var c=$('[data-sid="'+id+'"]');if(c&&c.scrollIntoView)c.scrollIntoView({block:'center'})}
+
+$('#addStep').addEventListener('click',function(){
+  var s=newStep();state.steps.push(s);renderSteps();
+  var c=$('[data-sid="'+s.id+'"]');
+  if(c){c.scrollIntoView({block:'center'});var t=$('.stitle',c);if(t)t.focus({preventScroll:true})}
+});
+
+/* ---------- Archivos ---------- */
+function readImage(f){
+  return new Promise(function(res,rej){
+    var url=URL.createObjectURL(f),img=new Image();
+    img.onload=function(){
+      var w=img.naturalWidth,h=img.naturalHeight,k=Math.min(1,1400/Math.max(w,h));
+      w=Math.round(w*k);h=Math.round(h*k);
+      var c=document.createElement('canvas');c.width=w;c.height=h;
+      var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url);
+      res({id:uid(),kind:'img',name:f.name,caption:'',data:c.toDataURL('image/jpeg',0.82)});
+    };
+    img.onerror=function(){URL.revokeObjectURL(url);rej(new Error('img'))};
+    img.src=url;
+  });
+}
+function readVideo(f){
+  return new Promise(function(res,rej){
+    var r=new FileReader();
+    r.onload=function(){res({id:uid(),kind:'video',name:f.name,caption:'',data:r.result,_url:URL.createObjectURL(f)})};
+    r.onerror=function(){rej(r.error)};
+    r.readAsDataURL(f);
+  });
+}
+async function addFiles(sid,files){
+  var i=findStep(sid);if(i<0||!files.length)return;
+  toast('Procesando archivos…',60000);
+  var added=0;
+  for(var k=0;k<files.length;k++){
+    var f=files[k];
+    try{
+      if(f.type.indexOf('image/')===0){state.steps[i].media.push(await readImage(f));added++}
+      else if(f.type.indexOf('video/')===0){
+        if(f.size>MAX_VIDEO){toast('"'+f.name+'" pesa '+mb(f.size)+' MB. El máximo es '+mb(MAX_VIDEO)+' MB por video: recórtalo y vuelve a subirlo.',6000);continue}
+        state.steps[i].media.push(await readVideo(f));added++;
+      }else toast('"'+f.name+'" no es una foto ni un video.',4000);
+    }catch(err){toast('No se pudo leer "'+f.name+'". Prueba con JPG, PNG o MP4.',5000)}
+  }
+  renderSteps();
+  if(added)toast(added===1?'Archivo agregado':added+' archivos agregados',2000);
+}
+
+/* ---------- Documento ---------- */
+function clean(d,light){
+  var o={format:'instructivo-v1',light:!!light};
+  FIELDS.forEach(function(k){o[k]=d[k]||''});
+  o.steps=d.steps.map(function(s){return {id:s.id,titulo:s.titulo,texto:s.texto,advertencia:s.advertencia,
+    media:s.media.map(function(m){return {id:m.id,kind:m.kind,name:m.name,caption:m.caption,data:light?null:m.data}})}});
+  return o;
+}
+function mediaDoc(m){
+  var cap=m.caption?'<figcaption>'+esc(m.caption)+'</figcaption>':'';
+  var label=m.caption||m.name||'';
+  if(!m.data)return '<figure><div class="ph">'+(m.kind==='video'?'Video':'Foto')+': '+esc(label)+'</div></figure>';
+  if(m.kind==='video')return '<figure><video src="'+m.data+'" controls playsinline preload="metadata"></video><div class="vid-note">Video: '+esc(label)+' (disponible en la versión digital)</div>'+cap+'</figure>';
+  return '<figure><img src="'+m.data+'" alt="'+esc(label||'Foto del paso')+'">'+cap+'</figure>';
+}
+function stepDoc(s,i){
+  return '<li class="step"><div class="num" aria-hidden="true">'+String(i+1).padStart(2,'0')+'</div><div class="body">'+
+    '<h3>'+esc(s.titulo||'Paso sin título')+'</h3>'+
+    (s.texto?'<p>'+nl(s.texto)+'</p>':'')+
+    (s.advertencia?'<div class="warn"><b>Precaución</b><br>'+nl(s.advertencia)+'</div>':'')+
+    '</div>'+(s.media.length?'<div class="media">'+s.media.map(mediaDoc).join('')+'</div>':'')+'</li>';
+}
+function docBody(d){
+  var meta=[['Equipo',d.equipo],['Área o ubicación',d.area],['Versión',d.version],['Fecha',fmtDate(d.fecha)],['Elaborado por',d.autor]].filter(function(x){return x[1]});
+  var epp=lines(d.epp),mat=lines(d.materiales);
+  var li=function(a){return '<ul>'+a.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul>'};
+  return '<header class="doc-head"><div class="eyebrow">Instructivo de uso</div><h1>'+esc(d.titulo||'Instructivo sin título')+'</h1>'+
+    (d.objetivo?'<p class="lead">'+nl(d.objetivo)+'</p>':'')+
+    (meta.length?'<dl class="meta">'+meta.map(function(x){return '<div><dt>'+x[0]+'</dt><dd>'+esc(x[1])+'</dd></div>'}).join('')+'</dl>':'')+'</header>'+
+    ((epp.length||mat.length)?'<div class="panel-row">'+
+      (epp.length?'<section class="panel safety"><h2>Seguridad y EPP</h2><p class="sub">EPP: elementos de protección personal</p>'+li(epp)+'</section>':'')+
+      (mat.length?'<section class="panel"><h2>Materiales</h2>'+li(mat)+'</section>':'')+'</div>':'')+
+    '<ol class="steps">'+d.steps.map(stepDoc).join('')+'</ol>'+
+    '<p class="doc-foot">'+esc(d.titulo||'Instructivo')+' · '+d.steps.length+(d.steps.length===1?' paso':' pasos')+(d.version?' · versión '+esc(d.version):'')+'</p>';
+}
+function buildHTML(d,light){
+  var c=clean(d,light);
+  var json=JSON.stringify(c).replace(/</g,'\\u003c');
+  var S='<scr'+'ipt',E='</scr'+'ipt>';
+  return '<!DOCTYPE html>\n<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
+    '<title>'+esc(c.titulo||'Instructivo')+'</title>'+
+    '<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'+
+    '<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">'+
+    '<style>'+$('#shared').textContent+
+    '\nbody{margin:0;padding:20px 16px 96px;background:var(--bg)}'+
+    '\n.printbar{position:fixed;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:12px;background:var(--surface);border-top:1px solid var(--line)}'+
+    '\n.printbar button{min-height:46px;padding:0 20px;border-radius:8px;border:0;background:var(--accent);color:var(--accent-ink);font:600 15px var(--body);cursor:pointer}'+
+    '</style></head><body><main class="doc">'+docBody(c)+'</main>'+
+    '<div class="printbar no-print"><button type="button" onclick="window.print()">Guardar como PDF o imprimir</button></div>'+
+    S+' type="application/json" id="instructivo-data">'+json+E+
+    S+'>document.addEventListener("click",function(e){var t=e.target;if(t.tagName==="IMG"&&t.closest(".media"))t.classList.toggle("zoom")})'+E+
+    '</body></html>';
+}
+
+/* ---------- Pantallas ---------- */
+function enableTabs(){$('#tabEdit').disabled=!state;$('#tabView').disabled=!state}
+function setView(v){
+  if(v!=='home'&&!state)return;
+  if(view!=='home')flush();
+  view=v;
+  $('#home').hidden=v!=='home';$('#editor').hidden=v!=='edit';$('#preview').hidden=v!=='view';
+  $('#tabHome').setAttribute('aria-pressed',v==='home');
+  $('#tabEdit').setAttribute('aria-pressed',v==='edit');
+  $('#tabView').setAttribute('aria-pressed',v==='view');
+  $('#barHome').hidden=v!=='home';$('#barEdit').hidden=v!=='edit';$('#barView').hidden=v!=='view';
+  if(v==='view')$('#preview').innerHTML='<main class="doc">'+docBody(clean(state,false))+'</main>';
+  if(v==='home')renderHome();
+  window.scrollTo(0,0);
+}
+$('#tabHome').addEventListener('click',function(){setView('home')});
+$('#tabEdit').addEventListener('click',function(){setView('edit')});
+$('#tabView').addEventListener('click',function(){setView('view')});
+$('#preview').addEventListener('click',function(e){var t=e.target;if(t.tagName==='IMG'&&t.closest('.media'))t.classList.toggle('zoom')});
+$('#printBtn').addEventListener('click',function(){try{window.print()}catch(e){toast('Tu navegador no permite imprimir desde aquí.',4000)}});
+
+/* ---------- Lista de instructivos ---------- */
+function pcard(m){
+  var d='';try{d=new Date(m.updated).toLocaleDateString('es-CL',{day:'numeric',month:'short'})}catch(e){}
+  return '<article class="pcard" data-pid="'+m.id+'">'+
+    '<button type="button" class="popen" data-act="open"><strong>'+esc(m.titulo||'Sin título')+'</strong>'+
+    (m.equipo?'<span>'+esc(m.equipo)+'</span>':'')+
+    '<span class="pm">'+m.pasos+(m.pasos===1?' paso':' pasos')+' · '+m.medios+' fotos/videos · '+esc(d)+'</span></button>'+
+    '<button type="button" class="btn small danger" data-act="delp">Eliminar</button></article>';
+}
+async function renderHome(){
+  var metas=[];try{metas=await dbList('meta')}catch(e){}
+  metas.sort(function(a,b){return b.updated-a.updated});
+  $('#homeList').innerHTML=metas.length?metas.map(pcard).join(''):'<p class="empty">Todavía no tienes instructivos. Toca + Nuevo instructivo para empezar.</p>';
+}
+$('#homeList').addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b)return;
+  var id=b.closest('[data-pid]').dataset.pid;
+  if(b.dataset.act==='open')openProject(id);
+  else if(b.dataset.act==='delp')arm('p'+id,b,'¿Seguro?',async function(){
+    try{await dbDelete(id);if(state&&state.id===id){state=null;enableTabs()}renderHome();toast('Instructivo eliminado',2000)}catch(e){toast('No se pudo eliminar.',3000)}
+  });
+});
+async function openProject(id){
+  await flush();
+  var o;try{o=await dbGet('projects',id)}catch(e){}
+  if(!o){toast('No se encontró ese instructivo.',3000);renderHome();return}
+  var r=normalize(o,{});
+  quiet=true;state=r.st;state.id=o.id;state.updated=o.updated;loadFields();renderSteps();quiet=false;
+  setSaved('Guardado en este teléfono');enableTabs();setView('edit');
+}
+$('#newProj').addEventListener('click',async function(){
+  await flush();
+  var s=blank();s.steps.push(newStep());
+  quiet=true;state=s;loadFields();renderSteps();quiet=false;
+  enableTabs();await doSave();setView('edit');
+  var t=$('#f-titulo');if(t)t.focus();
+});
+
+/* ---------- Exportar ---------- */
+function slug(s){return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,50)||'instructivo'}
+async function saveFile(name,html){
+  var blob=new Blob([html],{type:'text/html'});
+  var coarse=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches;
+  try{
+    var file=new File([blob],name,{type:'text/html'});
+    if(coarse&&navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:(state&&state.titulo)||'Instructivo'});
+      return;
+    }
+  }catch(err){if(err&&err.name==='AbortError')return}
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href)},5000);
+  toast('Archivo descargado. Búscalo en Descargas o en Archivos.',4000);
+}
+function mediaBytes(){var n=0;state.steps.forEach(function(s){s.media.forEach(function(m){n+=(m.data||'').length})});return n}
+function openSheet(){
+  var b=mediaBytes();
+  $('#sizeHint').textContent=b?'Tamaño aproximado: '+mb(b)+' MB'+(b>25*1048576?'. Es pesado para enviar por correo; mejor por Teams, WhatsApp o carpeta compartida.':''):'Sin fotos ni videos por ahora.';
+  $('#sheetBack').hidden=false;
+}
+function closeSheet(){$('#sheetBack').hidden=true}
+$('#openSheet').addEventListener('click',openSheet);
+$('#openSheet2').addEventListener('click',openSheet);
+$('#closeSheet').addEventListener('click',closeSheet);
+$('#sheetBack').addEventListener('click',function(e){if(e.target===this)closeSheet()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeSheet()});
+$('#dlFull').addEventListener('click',function(){saveFile(slug(state.titulo)+'.html',buildHTML(state,false))});
+$('#dlLight').addEventListener('click',function(){saveFile(slug(state.titulo)+'-liviano.html',buildHTML(state,true))});
+
+var PROMPT=[
+'Te adjunto el archivo HTML de un instructivo de manipulación y uso de un equipo. Es la versión liviana: las fotos y videos aparecen como marcadores con su leyenda.',
+'',
+'Qué necesito:',
+'1. Lee los datos del bloque JSON con id "instructivo-data" que está dentro del archivo.',
+'2. Mejora la redacción: frases cortas, un paso = una acción, verbos en imperativo (Presione, Verifique, Espere) y lenguaje simple. Pon los riesgos y errores frecuentes en el campo "advertencia" de cada paso.',
+'3. Completa EPP y materiales si faltan, pero no inventes datos técnicos (valores, tiempos, modelos). Si falta información, pregúntame antes de escribirla.',
+'4. Conserva exactamente los mismos "id" de pasos y de fotos/videos, su orden y su cantidad. Si agregas un paso nuevo, dale un "id" nuevo.',
+'5. Devuélveme SOLO el JSON completo y mejorado, dentro de un bloque de código, para pegarlo en el creador de instructivos.'
+].join('\n');
+$('#copyPrompt').addEventListener('click',function(){
+  var box=$('#promptBox');
+  function fallback(){box.hidden=false;box.value=PROMPT;box.focus();box.select();toast('Copia el texto del recuadro y envíalo a Claude',4000)}
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(PROMPT).then(function(){toast('Prompt copiado',2500)}).catch(fallback);
+    else fallback();
+  }catch(e){fallback()}
+});
+
+/* ---------- Importar ---------- */
+function normalize(obj,old){
+  if(!obj||!Array.isArray(obj.steps))throw new Error('formato');
+  var lost=0,next=blank();
+  FIELDS.forEach(function(k){if(obj[k]!=null)next[k]=str(obj[k])});
+  next.steps=obj.steps.map(function(s){
+    var media=[];
+    (Array.isArray(s.media)?s.media:[]).forEach(function(m){
+      var o=old[m.id];var data=m.data||(o&&o.data)||null;
+      if(!data){lost++;return}
+      media.push({id:m.id||uid(),kind:m.kind==='video'?'video':'img',name:str(m.name),caption:str(m.caption),data:data,_url:(!m.data&&o)?o._url:undefined});
+    });
+    return {id:s.id||uid(),titulo:str(s.titulo),texto:str(s.texto),advertencia:str(s.advertencia),media:media};
+  });
+  return {st:next,lost:lost};
+}
+function lostMsg(lost,ok){return lost?'Listo. '+lost+(lost===1?' foto o video no se pudo recuperar.':' fotos o videos no se pudieron recuperar.'):ok}
+function applyImport(obj){
+  var old={};state.steps.forEach(function(s){s.media.forEach(function(m){old[m.id]=m})});
+  var r=normalize(obj,old);var id=state.id;
+  state=r.st;state.id=id;loadFields();renderSteps();
+  toast(lostMsg(r.lost,'Texto aplicado'),r.lost?6000:3000);
+}
+function fromHTML(text){
+  var el=new DOMParser().parseFromString(text,'text/html').getElementById('instructivo-data');
+  if(!el)throw new Error('sin datos');
+  return JSON.parse(el.textContent);
+}
+$('#openFile').addEventListener('change',function(){
+  var f=this.files&&this.files[0];this.value='';if(!f)return;
+  var r=new FileReader();
+  r.onload=async function(){
+    try{
+      var t=String(r.result);
+      var obj=t.trim().charAt(0)==='{'?JSON.parse(t):fromHTML(t);
+      var res=normalize(obj,{});
+      await flush();
+      quiet=true;state=res.st;loadFields();renderSteps();quiet=false;
+      enableTabs();await doSave();setView('edit');
+      toast(lostMsg(res.lost,'Instructivo abierto'),res.lost?6000:3000);
+    }catch(e){toast('Ese archivo no es un instructivo de esta herramienta.',5000)}
+  };
+  r.onerror=function(){toast('No se pudo leer el archivo.',4000)};
+  r.readAsText(f);
+});
+$('#applyPaste').addEventListener('click',function(){
+  var t=$('#pasteBox').value;var a=t.indexOf('{'),b=t.lastIndexOf('}');
+  if(a<0||b<=a){toast('Pega el JSON completo que te devolvió Claude.',4000);return}
+  try{applyImport(JSON.parse(t.slice(a,b+1)));$('#pasteBox').value='';closeSheet()}
+  catch(e){toast('No pude leer ese texto. Pide a Claude el JSON completo en un solo bloque.',5000)}
+});
+
+/* ---------- Inicio ---------- */
+async function seed(){
+  var metas=await dbList('meta');var flag=null;
+  try{flag=localStorage.getItem('inst_seed')}catch(e){}
+  if(!metas.length&&!flag){await dbSave(example());try{localStorage.setItem('inst_seed','1')}catch(e){}}
+}
+(async function init(){
+  try{
+    DB=await openDB();await seed();
+    try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+  }catch(e){DB=null;toast('Este navegador no permite guardar en el teléfono. Exporta el HTML al terminar.',7000)}
+  enableTabs();setView('home');
+})();
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})});
+}
+})();
+</script>
+</body>
+</html>
